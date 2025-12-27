@@ -4,7 +4,33 @@ let currentPlayer = 'X';
 let gameActive = true;
 
 // Audio Context for sound effects
-const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+let audioContext = null;
+
+// Initialize audio context (requires user gesture)
+function initAudioContext() {
+    if (!audioContext && (window.AudioContext || window.webkitAudioContext)) {
+        try {
+            audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        } catch (e) {
+            console.warn('Web Audio API not supported:', e);
+        }
+    }
+}
+
+// Helper function to play sound safely
+function playSound(soundFn) {
+    try {
+        initAudioContext();
+        if (audioContext && audioContext.state === 'suspended') {
+            audioContext.resume();
+        }
+        if (audioContext) {
+            soundFn();
+        }
+    } catch (e) {
+        console.warn('Error playing sound:', e);
+    }
+}
 
 // Sound effect functions
 function playMoveSound() {
@@ -123,7 +149,7 @@ function handleCellClick(event) {
     clickedCell.classList.add('disabled');
 
     // Play move sound
-    playMoveSound();
+    playSound(playMoveSound);
 
     // Check for win or draw
     checkResult();
@@ -153,7 +179,7 @@ function checkResult() {
         gameActive = false;
         
         // Play win sound
-        playWinSound();
+        playSound(playWinSound);
         return;
     }
 
@@ -163,7 +189,7 @@ function checkResult() {
         gameActive = false;
         
         // Play draw sound
-        playDrawSound();
+        playSound(playDrawSound);
         return;
     }
 
@@ -193,7 +219,7 @@ function resetGame() {
     updateStatus();
     
     // Play reset sound
-    playResetSound();
+    playSound(playResetSound);
 }
 
 // Start the game
